@@ -1,0 +1,2 @@
+Employee{name='Sofia Egortceva', salary=60001.0} from IT to Finance
+Employee{name='Ivan Ivanov', salary=60000.55} from IT to Safety
