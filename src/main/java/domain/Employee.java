@@ -1,7 +1,6 @@
 package domain;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 public class Employee {
     private String name;
@@ -35,9 +34,6 @@ public class Employee {
 
     @Override
     public String toString() {
-        return "Employee{" +
-                "name='" + name + '\'' +
-                ", salary=" + salary +
-                '}';
+        return "Сотрудник " + name + " с зарплатой " + salary;
     }
 }

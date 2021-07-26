@@ -1,9 +1,12 @@
 package domain;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
-public class Department {
+public class Department{
     private String name;
     private List<Employee> employeeList;
 
@@ -11,8 +14,14 @@ public class Department {
         this.name = name;
     }
 
+    public Department(String name, List<Employee> employeeList) {
+        this.name = name;
+        this.employeeList = employeeList;
+    }
+
     public Department() {
     }
+
 
     public String getName() {
         return name;
@@ -50,4 +59,20 @@ public class Department {
                 ", employeeList=" + employeeList +
                 '}';
     }
+
+    public BigDecimal getAverageSalary(Department department) {
+        List<BigDecimal> list = department.getEmployeeList().stream()
+                .map(e -> e.getSalary())
+                .collect(Collectors.toList());
+
+        BigDecimal summ = BigDecimal.ZERO;
+
+        for (BigDecimal bigDecimal : list) {
+            summ = summ.add(bigDecimal);
+        }
+
+        return summ.divide(new BigDecimal(list.size()), 2, RoundingMode.HALF_UP);
+    }
+
+
 }
