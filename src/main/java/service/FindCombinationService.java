@@ -6,6 +6,7 @@ import domain.Employee;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.Map;
 
 public class FindCombinationService {
     public ReadAndValidateService readAndValidateService = new ReadAndValidateService();
-    private Comparator<Department> comparator = (d1, d2) -> d1.getAverageSalary(d1).compareTo(d2.getAverageSalary(d2));
+    private Comparator<Department> comparator = (d1, d2) -> d1.getAverageSalary().compareTo(d2.getAverageSalary());
 
     public void findCombination(String pathForRead, String pathForWrite) {
         Map<String, Department> validDepartments = readAndValidateService.readFromFile(pathForRead);
@@ -31,8 +32,8 @@ public class FindCombinationService {
 
     private void writeCombinationToFile(Department lessDepartment, Department moreDepartment, String pathForWrite) {
         try (FileWriter writer = new FileWriter(pathForWrite, true)) {
-            BigDecimal bigSalary = moreDepartment.getAverageSalary(moreDepartment);
-            BigDecimal smallSalary = lessDepartment.getAverageSalary(lessDepartment);
+            BigDecimal bigSalary = moreDepartment.getAverageSalary();
+            BigDecimal smallSalary = lessDepartment.getAverageSalary();
             List<Employee> employeeList = moreDepartment.getEmployeeList();
             writer.write(String.format("Возможен перевод из департамента " + moreDepartment.getName() + " в департамент "
                     + lessDepartment.getName() + ", где средние зарплаты: " + bigSalary.toString()
@@ -41,28 +42,30 @@ public class FindCombinationService {
                 if (bigSalary.compareTo(employeeList.get(i).getSalary()) > 0
                         && employeeList.get(i).getSalary().compareTo(smallSalary) > 0) {
 
-                    List<BigDecimal> avarageSalaryAfter = getAverageSalaryAfter(moreDepartment, lessDepartment, employeeList.get(i));
-
-                    String lineForWrite = employeeList.get(i).toString() + " from " + moreDepartment.getName()
-                            + " to " + lessDepartment.getName()
-                            + " после перевода среднии зарплаты составлят соответственно,"
-                            + avarageSalaryAfter.get(0).toString() + " и " + avarageSalaryAfter.get(1).toString() + "\n";
-                    writer.write(lineForWrite);
+                    writer.write(lineForWrite(employeeList.get(i), moreDepartment, lessDepartment));
                 }
             }
         } catch (IOException e) {
-            System.out.println("Некорректный путь для файла с результатами");
+            System.out.println("Ошибка записи в файл");
         }
     }
 
 
-    private List<BigDecimal> getAverageSalaryAfter(Department moreDepartmen, Department lessDepartment, Employee employee) {
-        List<BigDecimal> list = new ArrayList<>();
-        moreDepartmen.getEmployeeList().remove(employee);
-        lessDepartment.getEmployeeList().add(employee);
-        list.add(moreDepartmen.getAverageSalary(moreDepartmen));
-        list.add(lessDepartment.getAverageSalary(lessDepartment));
-        return list;
+    String lineForWrite(Employee employee, Department moreDepartment, Department lessDepartment){
+        BigDecimal bigSalary = moreDepartment.getSumSalary();
+        BigDecimal smallSalary = lessDepartment.getSumSalary();
+
+        BigDecimal newBigAverageSalary = (bigSalary.subtract(employee.getSalary()))
+                .divide(new BigDecimal(moreDepartment.getEmployeeList().size() - 1), 2, RoundingMode.HALF_UP);
+
+        BigDecimal newSmallAverageSalary = (smallSalary.add(employee.getSalary()))
+                .divide(new BigDecimal(lessDepartment.getEmployeeList().size() + 1), 2, RoundingMode.HALF_UP);
+
+        String lineForWrite = employee.toString() + " from " + moreDepartment.getName()
+                + " to " + lessDepartment.getName()
+                + " после перевода среднии зарплаты составлят соответственно,"
+        + newBigAverageSalary.toString() + " и " + newSmallAverageSalary.toString() + "\n";
+        return lineForWrite;
     }
 
 }

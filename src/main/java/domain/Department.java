@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class Department{
     private String name;
@@ -60,18 +59,17 @@ public class Department{
                 '}';
     }
 
-    public BigDecimal getAverageSalary(Department department) {
-        List<BigDecimal> list = department.getEmployeeList().stream()
-                .map(e -> e.getSalary())
-                .collect(Collectors.toList());
-
+    public BigDecimal getSumSalary(){
         BigDecimal summ = BigDecimal.ZERO;
-
-        for (BigDecimal bigDecimal : list) {
-            summ = summ.add(bigDecimal);
+        for (Employee e : employeeList) {
+            summ = summ.add(e.getSalary());
         }
+        return summ;
+    }
 
-        return summ.divide(new BigDecimal(list.size()), 2, RoundingMode.HALF_UP);
+    public BigDecimal getAverageSalary() {
+        BigDecimal summ = getSumSalary();
+        return summ.divide(new BigDecimal(employeeList.size()), 2, RoundingMode.HALF_UP);
     }
 
 

@@ -24,10 +24,11 @@ public class ReadAndValidateService {
                 String[] words = line.split(", ");
                 if (isValid(words, ++numberOfLine)) {
                     String name = words[0];
-                    String department = words[1];
+                    String departmentName = words[1];
                     BigDecimal salary = new BigDecimal(words[2]);
-                    mapOfDepartment.computeIfPresent(department, (key, value) -> value = addToList(department, (ArrayList<Employee>) value.getEmployeeList(), new Employee(name, salary)));
-                    mapOfDepartment.putIfAbsent(department, new Department(department, new ArrayList<Employee>(Arrays.asList(new Employee(name, salary)))));
+                    Department department = mapOfDepartment.getOrDefault(departmentName, new Department(departmentName, new ArrayList<Employee>()));
+                    department.getEmployeeList().add(new Employee(name, salary));
+                    mapOfDepartment.put(departmentName, department);
                 }
             }
         } catch (IOException e) {
@@ -36,10 +37,7 @@ public class ReadAndValidateService {
         return mapOfDepartment;
     }
 
-    private Department addToList(String department, ArrayList<Employee> list, Employee employee) {
-        list.add(employee);
-        return new Department(department, list);
-    }
+
 
     private Boolean isValid(String[] words, int numberOfLine) {
         try {
