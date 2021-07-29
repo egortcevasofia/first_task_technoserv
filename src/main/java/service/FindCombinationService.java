@@ -10,17 +10,14 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 public class FindCombinationService {
-    public ReadAndValidateService readAndValidateService = new ReadAndValidateService();
+    private ReadAndValidateService readAndValidateService = new ReadAndValidateService();
     private Comparator<Department> comparator = (d1, d2) -> d1.getAverageSalary().compareTo(d2.getAverageSalary());
 
     public void findCombination(String pathForRead, String pathForWrite) {
-        Map<String, Department> validDepartments = readAndValidateService.readFromFile(pathForRead);
-        System.out.println(validDepartments);
-        List<Department> listOfDepartments = new ArrayList<>(validDepartments.values());
-        listOfDepartments.sort(comparator);
+        ArrayList<Department> listOfDepartments = readAndValidateService.readFromFile(pathForRead);
+        readAndValidateService.printToConsole(listOfDepartments);
 
         for (int i = 0; i < listOfDepartments.size(); i++) {
             for (int j = i + 1; j < listOfDepartments.size(); j++) {
@@ -30,19 +27,19 @@ public class FindCombinationService {
     }
 
 
-    private void writeCombinationToFile(Department lessDepartment, Department moreDepartment, String pathForWrite) {
-        try (FileWriter writer = new FileWriter(pathForWrite, true)) {
-            BigDecimal bigSalary = moreDepartment.getAverageSalary();
-            BigDecimal smallSalary = lessDepartment.getAverageSalary();
-            List<Employee> employeeList = moreDepartment.getEmployeeList();
-            writer.write(String.format("Возможен перевод из департамента " + moreDepartment.getName() + " в департамент "
-                    + lessDepartment.getName() + ", где средние зарплаты: " + bigSalary.toString()
-                    + " и " + smallSalary.toString() + " соответственно, следующих сотрудников: \n"));
-            for (int i = 0; i < employeeList.size(); i++) {
-                if (bigSalary.compareTo(employeeList.get(i).getSalary()) > 0
-                        && employeeList.get(i).getSalary().compareTo(smallSalary) > 0) {
+    private void writeCombinationToFile(Department leastDepartment, Department biggestDepartment, String pathForWrite) {
+        try (FileWriter writer = new FileWriter(pathForWrite, false)) {
+            BigDecimal bigSalary = biggestDepartment.getAverageSalary();
+            BigDecimal smallSalary = leastDepartment.getAverageSalary();
+            List<Employee> employeeList = biggestDepartment.getEmployeeList();
+            writer.write("Возможен перевод из департамента " + biggestDepartment.getName() + " в департамент "
+                    + leastDepartment.getName() + ", где средние зарплаты: " + bigSalary.toString()
+                    + " и " + smallSalary.toString() + " соответственно, следующих сотрудников: \n");
+            for (Employee employee : employeeList) {
+                if (bigSalary.compareTo(employee.getSalary()) > 0
+                        && employee.getSalary().compareTo(smallSalary) > 0) {
 
-                    writer.write(lineForWrite(employeeList.get(i), moreDepartment, lessDepartment));
+                    writer.write(lineForWrite(employee, biggestDepartment, leastDepartment));
                 }
             }
         } catch (IOException e) {
@@ -51,21 +48,20 @@ public class FindCombinationService {
     }
 
 
-    String lineForWrite(Employee employee, Department moreDepartment, Department lessDepartment){
-        BigDecimal bigSalary = moreDepartment.getSumSalary();
-        BigDecimal smallSalary = lessDepartment.getSumSalary();
+    private String lineForWrite(Employee employee, Department biggestDepartment, Department leastDepartment) {
+        BigDecimal bigSalary = biggestDepartment.getSumSalary();
+        BigDecimal smallSalary = leastDepartment.getSumSalary();
 
         BigDecimal newBigAverageSalary = (bigSalary.subtract(employee.getSalary()))
-                .divide(new BigDecimal(moreDepartment.getEmployeeList().size() - 1), 2, RoundingMode.HALF_UP);
+                .divide(new BigDecimal(biggestDepartment.getEmployeeList().size() - 1), 2, RoundingMode.HALF_UP);
 
         BigDecimal newSmallAverageSalary = (smallSalary.add(employee.getSalary()))
-                .divide(new BigDecimal(lessDepartment.getEmployeeList().size() + 1), 2, RoundingMode.HALF_UP);
+                .divide(new BigDecimal(leastDepartment.getEmployeeList().size() + 1), 2, RoundingMode.HALF_UP);
 
-        String lineForWrite = employee.toString() + " from " + moreDepartment.getName()
-                + " to " + lessDepartment.getName()
+        return employee.toString() + " from " + biggestDepartment.getName()
+                + " to " + leastDepartment.getName()
                 + " после перевода среднии зарплаты составлят соответственно,"
-        + newBigAverageSalary.toString() + " и " + newSmallAverageSalary.toString() + "\n";
-        return lineForWrite;
+                + newBigAverageSalary.toString() + " и " + newSmallAverageSalary.toString() + "\n";
     }
 
 }
